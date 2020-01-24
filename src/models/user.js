@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const bycript = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
+// Constrói a coleção do DB 
 const userSchema = new mongoose.Schema({
     nome: {
         type: String,
@@ -53,18 +54,18 @@ userSchema.methods.toJSON = function () {
 
     return userObject
 }
-
+// Método no qual gera o token vinculado ao usuário
 userSchema.methods.generateAuthToken = async function () {
     const user = this
     const token = jwt.sign({
         _id: user._id.toString()
-    }, 'codigosenha')
+    }, process.env.JWT_SECRET)
     user.token = token
     await user.save()
     return token
 }
 
-// Hash
+// Hash da senha
 userSchema.pre('save', async function (next) {
     const user = this
 
@@ -74,6 +75,7 @@ userSchema.pre('save', async function (next) {
     next()
 })
 
+// Busca o email para não permitir cadastro com o mesmo email no sistema
 userSchema.statics.findEmail = async function (email) {
     const user = await User.findOne({
         email
@@ -82,14 +84,16 @@ userSchema.statics.findEmail = async function (email) {
         throw new Error('Email ja existente')
     }
 }
-
+// Verifica se email e senha são compativeis ao realizar o login no sistema
 userSchema.statics.findByCredentials = async (email, senha) => {
     user = await User.findOne({
         email
     })
+    // Se o usuário não for encontrado no DB
     if (!user) {
         throw new Error('Usuário e/ou senha inválidos')
     }
+    // Verifica se a senha está correta 
     const senhaMatchs = await bycript.compare(senha, user.senha)
 
     if (!senhaMatchs) {
@@ -98,9 +102,9 @@ userSchema.statics.findByCredentials = async (email, senha) => {
         const userUp = await User.findOneAndUpdate({
             email
         }, {
-            ultimo_login: Date.now()
+            ultimo_login: Date.now() // Atuliza o horário do ultimo login com o atual
         }, {
-            new: true
+            new: true // retorna o objeto atualizado
         })
         await userUp.save()
         return userUp

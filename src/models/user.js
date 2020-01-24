@@ -84,7 +84,7 @@ userSchema.statics.findEmail = async function (email) {
 }
 
 userSchema.statics.findByCredentials = async (email, senha) => {
-    const user = await User.findOne({
+    user = await User.findOne({
         email
     })
     if (!user) {
@@ -94,8 +94,17 @@ userSchema.statics.findByCredentials = async (email, senha) => {
 
     if (!senhaMatchs) {
         return false
+    } else {
+        const userUp = await User.findOneAndUpdate({
+            email
+        }, {
+            ultimo_login: Date.now()
+        }, {
+            new: true
+        })
+        await userUp.save()
+        return userUp
     }
-    return user
 }
 
 const User = mongoose.model('User', userSchema)

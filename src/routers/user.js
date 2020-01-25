@@ -50,7 +50,7 @@ router.get('/search', auth, async (req, res) => {
     const tempo = dataAtual - user.ultimo_login
 
     //Minutos entre a diferença do ultimo login e o momento da requisição
-    const minDiferenca = Math.round(tempo / 60)
+    const minDiferenca = Math.round(tempo / 1000 / 60)
     if (minDiferenca > 30) {
         return res.status(401).send('Sessão inválida')
     }
